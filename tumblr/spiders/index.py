@@ -1,14 +1,13 @@
 # encoding:utf-8
 import json
 
-import requests
 import scrapy
 from lxml import etree
 from scrapy.http.request import Request
 
 stream_cursor = "eyJGb2xsb3dlZFNlYXJjaFBvc3QiOltdLCJiZWZvcmVfaWQiOiIxNjI2ODY4NDM3NDMifQ%3D%3D"
 
-with open("../../config.json", "r") as f:
+with open("config.json", "r") as f:
     configData = json.loads(f.read(-1))
     default_cookie = configData["cookies"]
     maxPage = configData["maxPage"]
@@ -20,12 +19,6 @@ for pair in cookieList:
 
 video_url_list = set()
 start_url_list = []
-
-
-def fetch_stream(url, file_name):
-    r = requests.get(url)
-    with open("../../download" + file_name, "wb") as code:
-        code.write(r.content)
 
 
 class Index(scrapy.spiders.Spider):
@@ -61,7 +54,7 @@ class Index(scrapy.spiders.Spider):
                 video_name = video.xpath("@src")[0].split("tumblr_")[1].split("/")[0]
                 video_url = "https://vtt.tumblr.com/tumblr_" + video_name + ".mp4"
                 video_url_list.add(video_url)
-            with open("../../data.json", 'wb') as f:
+            with open("data.json", 'wb') as f:
                 try:
                     f.write(json.dumps(list(video_url_list)))
                 except Exception, e:
@@ -69,8 +62,6 @@ class Index(scrapy.spiders.Spider):
             try:
                 next_index = json.loads(response.body)['meta']['tumblr_next_page'].split('/')[3]
                 if int(next_index) > int(maxPage):
-                    if autoDownload:
-                        yield self.final()
                     return
                 next_timestamp = json.loads(response.body)['meta']['tumblr_next_page'].split('/')[4]
                 url = "https://www.tumblr.com/svc/dashboard/" + next_index + "/" + next_timestamp + \
